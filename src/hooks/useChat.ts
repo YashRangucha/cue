@@ -6,8 +6,6 @@ import { streamChatResponse } from '@/lib/groq';
 import { fillTemplate } from '@/lib/prompts';
 import type { Suggestion } from '@/lib/groq';
 
-const isDev = process.env.NODE_ENV === 'development';
-
 export function useChat(onError: (msg: string) => void) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
@@ -56,11 +54,6 @@ export function useChat(onError: (msg: string) => void) {
       ...history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
       { role: 'user' as const, content: finalUserContent },
     ];
-
-    if (isDev) {
-      console.log('[Chat] Using model:', settings.modelId);
-      console.log('[Chat] Transcript chars:', transcriptText.length);
-    }
 
     isStreamingRef.current = true;
     setIsStreaming(true);

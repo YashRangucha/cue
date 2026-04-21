@@ -8,8 +8,6 @@ const SLICE_MS = 5000;
 const BATCH_MS = 30000;
 const MIN_BLOB_SIZE = 500;
 
-const isDev = process.env.NODE_ENV === 'development';
-
 export function useAudioCapture(onError: (msg: string) => void) {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -29,10 +27,7 @@ export function useAudioCapture(onError: (msg: string) => void) {
       'audio/mp4',
     ];
     for (const type of types) {
-      if (MediaRecorder.isTypeSupported(type)) {
-        if (isDev) console.log('[Cue] Using mime type:', type);
-        return type;
-      }
+      if (MediaRecorder.isTypeSupported(type)) return type;
     }
     return '';
   };
@@ -55,28 +50,15 @@ export function useAudioCapture(onError: (msg: string) => void) {
     const blobMime = mime.split(';')[0];
     const combined = new Blob(blobs, { type: blobMime });
 
-    if (isDev) {
-      console.log(
-        `[Cue] Flushing ${blobs.length} blobs, ` +
-        `size: ${combined.size} bytes, ` +
-        `type: ${blobMime}, ext: ${ext}`
-      );
-    }
-
-    if (combined.size < MIN_BLOB_SIZE) {
-      if (isDev) console.log('[Cue] Blob too small, skipping transcription');
-      return;
-    }
+    if (combined.size < MIN_BLOB_SIZE) return;
 
     try {
       const text = await transcribeAudio(combined, apiKey, ext);
-      if (isDev) console.log('[Cue] Transcription result:', text);
       if (text?.trim()) {
         useSessionStore.getState().addTranscriptChunk(text.trim());
       }
     } catch (err: unknown) {
       const e = err as { status?: number; message?: string };
-      if (isDev) console.error('[Cue] Transcription error:', e);
       if (e?.status === 401) {
         onError('Invalid API key. Check your settings.');
       } else if (e?.status === 429) {
@@ -89,12 +71,10 @@ export function useAudioCapture(onError: (msg: string) => void) {
     }
   }, [onError]);
 
-  // Attach ondataavailable and onerror to a recorder instance
   const attachHandlers = (recorder: MediaRecorder) => {
     recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) {
         blobsRef.current.push(e.data);
-        if (isDev) console.log(`[Cue] Blob received: ${e.data.size} bytes`);
       }
     };
     recorder.onerror = () => {
@@ -102,7 +82,6 @@ export function useAudioCapture(onError: (msg: string) => void) {
     };
   };
 
-  // Stop current recorder cleanly and return when done
   const stopRecorderInstance = async () => {
     const rec = recorderRef.current;
     if (!rec || rec.state === 'inactive') return;
@@ -153,22 +132,16 @@ export function useAudioCapture(onError: (msg: string) => void) {
       recorder.start(SLICE_MS);
 
       useSessionStore.getState().setIsRecording(true);
-      if (isDev) console.log('[Cue] Recording started with mime:', mime);
 
-      // Schedule recurring batches by stopping + restarting the recorder.
-      // This ensures every batch is a self-contained valid audio file with
-      // its own container header — required for Whisper to decode correctly.
       const scheduleBatch = () => {
         batchTimerRef.current = setTimeout(async () => {
           if (isStoppingRef.current || !streamRef.current) return;
 
-          // Finalize current recorder so blobs form a valid file
           await stopRecorderInstance();
           await flush();
 
           if (isStoppingRef.current || !streamRef.current) return;
 
-          // Start fresh recorder — new container header for next batch
           const nextRecorder = new MediaRecorder(
             streamRef.current,
             mime ? { mimeType: mime } : {}
@@ -177,8 +150,6 @@ export function useAudioCapture(onError: (msg: string) => void) {
           blobsRef.current = [];
           attachHandlers(nextRecorder);
           nextRecorder.start(SLICE_MS);
-
-          if (isDev) console.log('[Cue] Batch recorder restarted');
           scheduleBatch();
         }, BATCH_MS);
       };
@@ -186,7 +157,6 @@ export function useAudioCapture(onError: (msg: string) => void) {
       scheduleBatch();
     } catch (err: unknown) {
       const e = err as { name?: string; message?: string };
-      if (isDev) console.error('[Cue] getUserMedia error:', e);
       if (e?.name === 'NotAllowedError' || e?.name === 'PermissionDeniedError') {
         onError('Microphone access denied. Click the lock icon in your browser address bar to allow it.');
       } else if (e?.name === 'NotFoundError') {
@@ -198,8 +168,6 @@ export function useAudioCapture(onError: (msg: string) => void) {
   }, [flush, onError]);
 
   const stopRecording = useCallback(async () => {
-    if (isDev) console.log('[Cue] Stopping recording...');
-
     isStoppingRef.current = true;
 
     if (batchTimerRef.current) {

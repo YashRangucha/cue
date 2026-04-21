@@ -5,8 +5,6 @@ import { useSessionStore } from '@/store/sessionStore';
 import { generateSuggestions } from '@/lib/groq';
 import { truncateToLastN } from '@/lib/formatters';
 
-const isDev = process.env.NODE_ENV === 'development';
-
 export function useSuggestions(onError: (msg: string) => void) {
   const [countdown, setCountdown] = useState(30);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -52,11 +50,6 @@ export function useSuggestions(onError: (msg: string) => void) {
         ? `[EARLIER — background context]\n${earlierPortion}\n\n[RECENT — base suggestions on this]\n${recentPortion}`
         : recentPortion;
 
-      if (isDev) {
-        console.log('[Cue] Transcript window:', recent.length, 'chars');
-        console.log('[Cue] Prompt sent:', settings.suggestionPrompt.slice(0, 200) + '...');
-      }
-
       const items = await generateSuggestions(
         settings.suggestionPrompt,
         recent,
@@ -73,7 +66,6 @@ export function useSuggestions(onError: (msg: string) => void) {
         state.addSuggestions(items, recent.length);
       }
     } catch (err: unknown) {
-      if (isDev) console.error('[Cue] Suggestion error:', err);
       const e = err as { status?: number };
       if (e?.status === 401) {
         onError('Invalid API key.');

@@ -32,7 +32,6 @@ interface SessionState {
   isSettingsOpen: boolean;
   setIsSettingsOpen: (v: boolean) => void;
   transcript: TranscriptEntry[];
-  addTranscript: (text: string) => void;
   addTranscriptChunk: (text: string) => void;
   suggestions: SuggestionBatch[];
   addSuggestions: (items: Suggestion[], transcriptWindowUsed: number) => void;
@@ -75,16 +74,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   setIsSettingsOpen: (v: boolean) => set({ isSettingsOpen: v }),
 
   transcript: [],
-  addTranscript: (text: string) => {
-    const now = new Date();
-    set((s) => ({
-      transcript: [
-        ...s.transcript,
-        { id: generateId(), text, timestamp: formatTimestamp(now) },
-      ],
-    }));
-  },
-
   addTranscriptChunk: (text: string) => {
     const now = new Date();
     set((s) => ({

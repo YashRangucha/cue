@@ -19,7 +19,7 @@ export default function SettingsModal() {
       setForm(storeSettings);
       setSaved(false);
     }
-  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, storeSettings]);
 
   if (!isOpen) return null;
 

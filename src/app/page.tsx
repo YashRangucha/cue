@@ -14,29 +14,6 @@ export default function Home() {
   const [toast, setToast] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'warning' | 'info'>('error');
 
-  // Migrate stale/decommissioned model IDs out of localStorage on first load
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('cue_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const blockedModels = [
-          'meta-llama/llama-4-maverick-17b-128e-instruct',
-          'llama-3.3-70b-versatile',
-          'llama3-70b-8192',
-          'llama3-8b-8192',
-        ];
-        if (blockedModels.includes(parsed.modelId)) {
-          parsed.modelId = 'llama-3.1-8b-instant';
-          localStorage.setItem('cue_settings', JSON.stringify(parsed));
-          useSessionStore.getState().setSettings(parsed);
-        }
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
-
   // Auto-open settings if no API key
   useEffect(() => {
     if (!useSessionStore.getState().settings.apiKey) {
