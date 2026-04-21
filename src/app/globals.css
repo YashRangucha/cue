@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-dm-sans), sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), monospace;
+  --color-surface: #0d0d0d;
+  --color-panel: #111111;
+  --color-card: #1a1a1a;
+  --color-border: #2a2a2a;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    background-color: #0d0d0d;
+    color: #e4e4e7;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  /* Slide in from top — used for new suggestion batches */
+  .animate-slide-in {
+    animation: slideInDown 0.25s ease-out forwards;
+  }
+
+  /* Staggered animation delays for suggestion cards */
+  .animation-delay-75 {
+    animation-delay: 75ms;
+  }
+  .animation-delay-150 {
+    animation-delay: 150ms;
+  }
+
+  /* Blinking cursor for streaming chat */
+  .animate-blink {
+    animation: blink 1s step-end infinite;
+  }
+}
