@@ -35,7 +35,7 @@ npm install
 Copy the example env file and add your key:
 
 ```bash
-cp .env.example .env.local
+cp .env.local
 ```
 
 Or paste your key directly in the Settings modal on first launch — it's stored in `localStorage`.
